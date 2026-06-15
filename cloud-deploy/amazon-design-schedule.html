@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>亚马逊设计作图排期表</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #667085;
+      --line: #d9dee8;
+      --soft: #f5f7fb;
+      --brand: #1f6feb;
+      --brand-dark: #164da8;
+      --white: #ffffff;
+      --p1: #fef2f2;
+      --p1-line: #ef4444;
+      --p2: #fff7ed;
+      --p2-line: #f97316;
+      --p3: #f0fdf4;
+      --p3-line: #22c55e;
+      --p4: #f8fafc;
+      --p4-line: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: var(--ink);
+      background: #eef2f7;
+      line-height: 1.55;
+    }
+
+    .page {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 28px 22px 56px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 820px;
+    }
+
+    .actions,
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .actions { justify-content: flex-end; }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--white);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 9px 13px;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button.primary {
+      border-color: var(--brand);
+      background: var(--brand);
+      color: var(--white);
+    }
+
+    button.danger { color: #b42318; }
+    button:hover { border-color: var(--brand); }
+    button.primary:hover { background: var(--brand-dark); }
+
+    section {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcff;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .section-body { padding: 18px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .type-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      background: var(--soft);
+    }
+
+    .type-card label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .type-card textarea {
+      min-height: 84px;
+      background: var(--white);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 9px;
+      background: var(--white);
+    }
+
+    .tag.p1 { border-color: var(--p1-line); background: var(--p1); color: #991b1b; }
+    .tag.p2 { border-color: var(--p2-line); background: var(--p2); color: #9a3412; }
+    .tag.p3 { border-color: var(--p3-line); background: var(--p3); color: #166534; }
+
+    .table-tools {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .new-column {
+      display: flex;
+      gap: 8px;
+      min-width: 280px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .new-column input {
+      max-width: 280px;
+      border-color: var(--line);
+      background: var(--white);
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 9px;
+      vertical-align: top;
+      font-size: 13px;
+      background: var(--white);
+      overflow: hidden;
+    }
+
+    th {
+      background: #f1f5fb;
+      text-align: left;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      user-select: none;
+    }
+
+    th.selected-column {
+      background: #dbeafe;
+      box-shadow: inset 0 0 0 2px var(--brand);
+    }
+
+    .header-label {
+      display: block;
+      min-height: 20px;
+      padding-right: 10px;
+      outline-offset: 2px;
+      cursor: text;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .column-resizer {
+      position: absolute;
+      top: 0;
+      right: -4px;
+      width: 8px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 3;
+    }
+
+    .column-resizer::after {
+      content: "";
+      position: absolute;
+      top: 9px;
+      bottom: 9px;
+      left: 3px;
+      width: 2px;
+      background: #cbd5e1;
+    }
+
+    th.selected-column .column-resizer::after,
+    .column-resizer:hover::after { background: var(--brand); }
+
+    td:last-child,
+    th:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 7px;
+      font: inherit;
+      color: var(--ink);
+      background: transparent;
+    }
+
+    textarea {
+      min-height: 38px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus,
+    .header-label:focus {
+      outline: 2px solid #c7dbff;
+      border-color: var(--brand);
+      background: var(--white);
+    }
+
+    .priority-select,
+    .status-select { font-weight: 700; }
+
+    tr.priority-p1 td { background: var(--p1); }
+    tr.priority-p1 td:first-child { border-left: 5px solid var(--p1-line); }
+    tr.priority-p2 td { background: var(--p2); }
+    tr.priority-p2 td:first-child { border-left: 5px solid var(--p2-line); }
+    tr.priority-p3 td { background: var(--p3); }
+    tr.priority-p3 td:first-child { border-left: 5px solid var(--p3-line); }
+    tr.priority-p4 td { background: var(--p4); }
+    tr.priority-p4 td:first-child { border-left: 5px solid var(--p4-line); }
+
+    tr.selected-row td {
+      box-shadow: inset 0 0 0 2px var(--brand);
+    }
+
+    .status-ready { color: #0f8a5f; }
+    .status-waiting { color: #b7791f; }
+    .status-risk { color: #c2410c; }
+    .status-late { color: #b42318; }
+
+    .help {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+      padding: 0 18px 12px;
+    }
+
+    #saveStatus { color: #0f766e; }
+
+    @media (max-width: 900px) {
+      header,
+      .grid { grid-template-columns: 1fr; }
+      .actions,
+      .table-tools,
+      .new-column { justify-content: flex-start; }
+      .table-tools { flex-direction: column; }
+      h1 { font-size: 24px; }
+    }
+
+    @media print {
+      body { background: var(--white); }
+      .page { max-width: none; padding: 0; }
+      .actions,
+      .table-tools,
+      .help { display: none; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>亚马逊设计作图排期表</h1>
+        <p class="subtitle">共享版作图明细表。打开共享网址后会自动保存，其他人刷新浏览器就能看到最新内容。</p>
+      </div>
+      <div class="actions">
+        <button type="button" onclick="loadSharedData()">刷新共享内容</button>
+        <button type="button" class="primary" onclick="saveSharedData({ manual: true })">保存修改</button>
+        <button type="button" onclick="addRow()">新增需求</button>
+        <button type="button" onclick="addTenRows()">新增 10 行</button>
+        <button type="button" onclick="exportCsv()">导出表格</button>
+        <button type="button" class="primary" onclick="window.print()">打印 / 保存 PDF</button>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-title">
+        <h2>排期口径</h2>
+        <div class="legend">
+          <span class="tag p1">P1 红色：今天必须处理</span>
+          <span class="tag p2">P2 橙色：本周重点</span>
+          <span class="tag p3">P3 绿色：正常排队</span>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="grid">
+          <div class="type-card">
+            <label for="rule-image-set">主图 / 精修 / A+ / 详情图</label>
+            <textarea id="rule-image-set">到货或照片齐全后再正式排期。需要明确主图数量、A+模块数量、卖点文案、图片尺寸、参考图、是否需要场景合成和精修程度。</textarea>
+          </div>
+          <div class="type-card">
+            <label for="rule-material">拍摄 / 素材准备</label>
+            <textarea id="rule-material">提前确认样品是否到货、是否需要补拍、拍摄角度、模特/道具/场景要求、产品瑕疵处理方式。素材不齐时先标“等素材”。</textarea>
+          </div>
+          <div class="type-card">
+            <label for="rule-urgent">紧急需求</label>
+            <textarea id="rule-urgent">紧急需求必须标 P1，写清原因、最终截止时间，以及会挤掉哪个已有排期。</textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>作图排期明细</h2>
+        <div class="legend">
+          <span class="tag">自动保存</span>
+          <span class="tag">点表头选中列</span>
+          <span class="tag">拖表头右边调宽</span>
+          <span class="tag">选中后可删列</span>
+        </div>
+      </div>
+
+      <div class="table-tools">
+        <div class="toolbar">
+          <button type="button" onclick="addRow()">新增一条需求</button>
+          <button type="button" onclick="duplicateLastRow()">复制最后一行</button>
+          <button type="button" class="danger" onclick="deleteLastRow()">删除最后一行</button>
+          <button type="button" class="danger" onclick="deleteSelectedRow()">删除选中行</button>
+          <button type="button" class="danger" onclick="deleteSelectedColumn()">删除选中栏</button>
+          <button type="button" class="primary" onclick="sortSchedule()">按紧急程度排序</button>
+        </div>
+        <div class="new-column">
+          <input id="newColumnName" placeholder="新栏名称，例如：拍摄人 / 店铺 / 设计师">
+          <button type="button" onclick="addColumn()">添加新栏</button>
+        </div>
+      </div>
+      <p class="help">提示：通过共享网址打开时会自动保存。其他人点“刷新共享内容”或重新打开页面，就能看到你保存后的内容。</p>
+      <p class="help" id="saveStatus">共享保存状态：正在准备</p>
+
+      <div class="table-wrap">
+        <table id="scheduleTable">
+          <colgroup>
+            <col style="width: 70px">
+            <col style="width: 100px">
+            <col style="width: 190px">
+            <col style="width: 150px">
+            <col style="width: 150px">
+            <col style="width: 120px">
+            <col style="width: 130px">
+            <col style="width: 130px">
+            <col style="width: 130px">
+            <col style="width: 130px">
+            <col style="width: 150px">
+            <col style="width: 240px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th><span class="header-label" contenteditable="true">序号</span></th>
+              <th><span class="header-label" contenteditable="true">运营</span></th>
+              <th><span class="header-label" contenteditable="true">产品 / ASIN</span></th>
+              <th><span class="header-label" contenteditable="true">套图名称</span></th>
+              <th><span class="header-label" contenteditable="true">需求类型</span></th>
+              <th><span class="header-label" contenteditable="true">紧急程度</span></th>
+              <th><span class="header-label" contenteditable="true">需求提供日</span></th>
+              <th><span class="header-label" contenteditable="true">产品发货日</span></th>
+              <th><span class="header-label" contenteditable="true">预计到货日</span></th>
+              <th><span class="header-label" contenteditable="true">终稿交付日</span></th>
+              <th><span class="header-label" contenteditable="true">当前状态</span></th>
+              <th><span class="header-label" contenteditable="true">风险 / 备注</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input value="1"></td>
+              <td><input placeholder="运营姓名"></td>
+              <td><textarea placeholder="产品名 / ASIN / 店铺"></textarea></td>
+              <td><input placeholder="例如：夏季套图 A"></td>
+              <td>
+                <select>
+                  <option>主图 / 精修 + A+ / 详情图</option>
+                  <option>拍摄 / 素材准备</option>
+                  <option>整套 Listing 图</option>
+                  <option>视频素材</option>
+                  <option>广告图</option>
+                  <option>其他</option>
+                </select>
+              </td>
+              <td>
+                <select class="priority-select" onchange="paintPriority(this)">
+                  <option>P1 紧急</option>
+                  <option>P2 重要</option>
+                  <option>P3 正常</option>
+                  <option>P4 暂缓</option>
+                </select>
+              </td>
+              <td><input type="date"></td>
+              <td><input type="date"></td>
+              <td><input type="date"></td>
+              <td><input type="date"></td>
+              <td>
+                <select class="status-select" onchange="paintStatus(this)">
+                  <option>等素材</option>
+                  <option>可推进</option>
+                  <option>设计中</option>
+                  <option>待反馈</option>
+                  <option>有风险</option>
+                  <option>已延期</option>
+                  <option>已完成</option>
+                </select>
+              </td>
+              <td><textarea placeholder="例如：样品未到 / 文案未确认 / 需补拍"></textarea></td>
+            </tr>
+            <tr>
+              <td><input value="2"></td>
+              <td><input></td>
+              <td><textarea></textarea></td>
+              <td><input></td>
+              <td>
+                <select>
+                  <option>主图 / 精修 + A+ / 详情图</option>
+                  <option>拍摄 / 素材准备</option>
+                  <option>整套 Listing 图</option>
+                  <option>视频素材</option>
+                  <option>广告图</option>
+                  <option>其他</option>
+                </select>
+              </td>
+              <td>
+                <select class="priority-select" onchange="paintPriority(this)">
+                  <option>P2 重要</option>
+                  <option>P1 紧急</option>
+                  <option>P3 正常</option>
+                  <option>P4 暂缓</option>
+                </select>
+              </td>
+              <td><input type="date"></td>
+              <td><input type="date"></td>
+              <td><input type="date"></td>
+              <td><input type="date"></td>
+              <td>
+                <select class="status-select" onchange="paintStatus(this)">
+                  <option>可推进</option>
+                  <option>等素材</option>
+                  <option>设计中</option>
+                  <option>待反馈</option>
+                  <option>有风险</option>
+                  <option>已延期</option>
+                  <option>已完成</option>
+                </select>
+              </td>
+              <td><textarea></textarea></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const table = document.getElementById("scheduleTable");
+    const saveStatus = document.getElementById("saveStatus");
+    let selectedColumnIndex = -1;
+    let selectedRow = null;
+    let resizing = null;
+    let saveTimer = null;
+    let isLoadingSharedData = false;
+    let loadedState = null;
+    let hasUnsavedChanges = false;
+
+    function setSaveStatus(text) {
+      saveStatus.textContent = "共享保存状态：" + text;
+    }
+
+    function renumberRows() {
+      table.querySelectorAll("tbody tr").forEach((row, index) => {
+        const firstInput = row.cells[0]?.querySelector("input");
+        if (firstInput) firstInput.value = String(index + 1);
+      });
+    }
+
+    function clearRow(row) {
+      row.querySelectorAll("input, textarea").forEach((field) => {
+        field.value = "";
+      });
+      row.querySelectorAll("select").forEach((field) => {
+        field.selectedIndex = 0;
+      });
+      paintRow(row);
+    }
+
+    function addRow() {
+      const body = table.querySelector("tbody");
+      const row = body.rows[0].cloneNode(true);
+      clearRow(row);
+      body.appendChild(row);
+      renumberRows();
+      setupRows();
+      scheduleSave();
+    }
+
+    function addTenRows() {
+      for (let index = 0; index < 10; index += 1) addRow();
+    }
+
+    function duplicateLastRow() {
+      const body = table.querySelector("tbody");
+      const lastRow = body.rows[body.rows.length - 1];
+      const row = lastRow.cloneNode(true);
+      body.appendChild(row);
+      renumberRows();
+      paintRow(row);
+      setupRows();
+      scheduleSave();
+    }
+
+    function deleteLastRow() {
+      const body = table.querySelector("tbody");
+      if (body.rows.length <= 1) return;
+      body.deleteRow(body.rows.length - 1);
+      selectedRow = null;
+      renumberRows();
+      setupRows();
+      scheduleSave();
+    }
+
+    function selectRow(row) {
+      selectedRow = row;
+      table.querySelectorAll("tbody tr").forEach((item) => {
+        item.classList.toggle("selected-row", item === row);
+      });
+    }
+
+    function setupRows() {
+      table.querySelectorAll("tbody tr").forEach((row) => {
+        row.onclick = (event) => {
+          if (event.target.closest(".column-resizer")) return;
+          selectRow(row);
+        };
+      });
+    }
+
+    function deleteSelectedRow() {
+      if (!selectedRow || !selectedRow.parentElement) {
+        setSaveStatus("请先点击要删除的那一行");
+        return;
+      }
+      const body = table.querySelector("tbody");
+      if (body.rows.length <= 1) {
+        setSaveStatus("至少保留一行，不能全部删除");
+        return;
+      }
+      selectedRow.remove();
+      selectedRow = null;
+      renumberRows();
+      setupRows();
+      scheduleSave();
+      setSaveStatus("已删除选中行，请点“保存修改”");
+    }
+
+    function findColumnIndex(title) {
+      return Array.from(table.tHead.rows[0].cells).findIndex((cell) => {
+        const label = cell.querySelector(".header-label");
+        return (label ? label.innerText : cell.innerText).trim() === title;
+      });
+    }
+
+    function sortSchedule() {
+      const priorityIndex = findColumnIndex("紧急程度");
+      const arrivalIndex = findColumnIndex("预计到货日");
+      if (priorityIndex < 0 || arrivalIndex < 0) {
+        setSaveStatus("排序失败：缺少“紧急程度”或“预计到货日”栏");
+        return;
+      }
+
+      const priorityRank = { P1: 1, P2: 2, P3: 3, P4: 4 };
+      const body = table.tBodies[0];
+      const rows = Array.from(body.rows);
+
+      rows.sort((left, right) => {
+        const leftPriority = getFieldValue(left.cells[priorityIndex]).slice(0, 2);
+        const rightPriority = getFieldValue(right.cells[priorityIndex]).slice(0, 2);
+        const leftRank = priorityRank[leftPriority] || 99;
+        const rightRank = priorityRank[rightPriority] || 99;
+        if (leftRank !== rightRank) return leftRank - rightRank;
+
+        const leftDate = getFieldValue(left.cells[arrivalIndex]) || "9999-12-31";
+        const rightDate = getFieldValue(right.cells[arrivalIndex]) || "9999-12-31";
+        return leftDate.localeCompare(rightDate);
+      });
+
+      rows.forEach((row) => body.appendChild(row));
+      renumberRows();
+      table.querySelectorAll("tbody tr").forEach(paintRow);
+      setupRows();
+      setSaveStatus("已按 P1 > P2 > P3 > P4，并按预计到货日排序");
+      saveSharedData({ reason: "排序已保存，刷新后不会变回去" });
+    }
+
+    function addColumn() {
+      const input = document.getElementById("newColumnName");
+      const name = input.value.trim() || "新栏";
+      addColumnWithName(name);
+      input.value = "";
+      selectColumn(table.rows[0].cells.length - 1);
+      scheduleSave();
+    }
+
+    function addColumnWithName(name, width = "150px") {
+      const col = document.createElement("col");
+      col.style.width = width;
+      table.querySelector("colgroup").appendChild(col);
+
+      const header = document.createElement("th");
+      const label = document.createElement("span");
+      label.className = "header-label";
+      label.contentEditable = "true";
+      label.textContent = name;
+      header.appendChild(label);
+      table.querySelector("thead tr").appendChild(header);
+
+      table.querySelectorAll("tbody tr").forEach((row) => {
+        const cell = document.createElement("td");
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = "填写" + name;
+        cell.appendChild(textarea);
+        row.appendChild(cell);
+      });
+
+      setupHeaders();
+      setupRows();
+    }
+
+    function deleteSelectedColumn() {
+      if (selectedColumnIndex < 0) return;
+      if (table.rows[0].cells.length <= 2) return;
+      table.querySelector("colgroup").children[selectedColumnIndex]?.remove();
+      Array.from(table.rows).forEach((row) => {
+        row.cells[selectedColumnIndex]?.remove();
+      });
+      selectedColumnIndex = -1;
+      setupHeaders();
+      renumberRows();
+      setupRows();
+      scheduleSave();
+    }
+
+    function selectColumn(index) {
+      selectedColumnIndex = index;
+      table.querySelectorAll("th").forEach((th, thIndex) => {
+        th.classList.toggle("selected-column", thIndex === index);
+      });
+    }
+
+    function setupHeaders() {
+      table.querySelectorAll("th").forEach((th, index) => {
+        th.dataset.index = String(index);
+        th.querySelector(".column-resizer")?.remove();
+        th.onclick = () => selectColumn(index);
+
+        const resizer = document.createElement("span");
+        resizer.className = "column-resizer";
+        resizer.addEventListener("mousedown", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          selectColumn(index);
+          const col = table.querySelector("colgroup").children[index];
+          resizing = {
+            index,
+            startX: event.clientX,
+            startWidth: col.getBoundingClientRect().width
+          };
+          document.body.style.cursor = "col-resize";
+        });
+        th.appendChild(resizer);
+      });
+    }
+
+    document.addEventListener("mousemove", (event) => {
+      if (!resizing) return;
+      const col = table.querySelector("colgroup").children[resizing.index];
+      const width = Math.max(70, resizing.startWidth + event.clientX - resizing.startX);
+      col.style.width = width + "px";
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (resizing) scheduleSave();
+      resizing = null;
+      document.body.style.cursor = "";
+    });
+
+    function paintPriority(select) {
+      paintRow(select.closest("tr"));
+      scheduleSave();
+    }
+
+    function paintStatus(select) {
+      select.className = "status-select";
+      const value = select.value;
+      if (value === "可推进" || value === "设计中" || value === "已完成") select.classList.add("status-ready");
+      if (value === "等素材" || value === "待反馈") select.classList.add("status-waiting");
+      if (value === "有风险") select.classList.add("status-risk");
+      if (value === "已延期") select.classList.add("status-late");
+      scheduleSave();
+    }
+
+    function paintRow(row) {
+      const select = row.querySelector(".priority-select");
+      const status = row.querySelector(".status-select");
+      row.classList.remove("priority-p1", "priority-p2", "priority-p3", "priority-p4");
+      if (select?.value.startsWith("P1")) row.classList.add("priority-p1");
+      if (select?.value.startsWith("P2")) row.classList.add("priority-p2");
+      if (select?.value.startsWith("P3")) row.classList.add("priority-p3");
+      if (select?.value.startsWith("P4")) row.classList.add("priority-p4");
+      if (status) {
+        status.className = "status-select";
+        const value = status.value;
+        if (value === "可推进" || value === "设计中" || value === "已完成") status.classList.add("status-ready");
+        if (value === "等素材" || value === "待反馈") status.classList.add("status-waiting");
+        if (value === "有风险") status.classList.add("status-risk");
+        if (value === "已延期") status.classList.add("status-late");
+      }
+    }
+
+    function getFieldValue(cell) {
+      const field = cell.querySelector("input, select, textarea");
+      return field ? field.value : "";
+    }
+
+    function setFieldValue(cell, value) {
+      const field = cell.querySelector("input, select, textarea");
+      if (!field) return;
+      if (field.tagName === "SELECT") {
+        const options = Array.from(field.options).map((option) => option.value);
+        field.value = options.includes(value) ? value : options[0];
+        return;
+      }
+      field.value = value || "";
+    }
+
+    function headerText(cell) {
+      const label = cell.querySelector(".header-label");
+      return (label ? label.innerText : cell.innerText).trim().replaceAll('"', '""');
+    }
+
+    function getState() {
+      return {
+        updatedAt: new Date().toISOString(),
+        rules: {
+          imageSet: document.getElementById("rule-image-set").value,
+          material: document.getElementById("rule-material").value,
+          urgent: document.getElementById("rule-urgent").value
+        },
+        columns: Array.from(table.tHead.rows[0].cells).map((cell, index) => ({
+          title: headerText(cell),
+          width: table.querySelector("colgroup").children[index]?.style.width || "150px"
+        })),
+        rows: Array.from(table.tBodies[0].rows).map((row) =>
+          Array.from(row.cells).map((cell) => getFieldValue(cell))
+        )
+      };
+    }
+
+    function applyState(state) {
+      if (!state || !state.columns || !state.rows) return;
+      const defaultColumns = ["序号", "运营", "产品 / ASIN", "套图名称", "需求类型", "紧急程度", "需求提供日", "产品发货日", "预计到货日", "终稿交付日", "当前状态", "风险 / 备注"];
+      const hasBrokenText = state.columns.some((column) => /�|搴|浜|闇|绱|鍥|鐘|椋|澶/.test(column.title || ""));
+      if (hasBrokenText) {
+        state.columns = state.columns.map((column, index) => ({
+          ...column,
+          title: defaultColumns[index] || column.title || "新栏"
+        }));
+      }
+      isLoadingSharedData = true;
+
+      document.getElementById("rule-image-set").value = state.rules?.imageSet || document.getElementById("rule-image-set").value;
+      document.getElementById("rule-material").value = state.rules?.material || document.getElementById("rule-material").value;
+      document.getElementById("rule-urgent").value = state.rules?.urgent || document.getElementById("rule-urgent").value;
+
+      while (table.rows[0].cells.length > state.columns.length) {
+        const lastIndex = table.rows[0].cells.length - 1;
+        table.querySelector("colgroup").children[lastIndex]?.remove();
+        Array.from(table.rows).forEach((row) => row.cells[lastIndex]?.remove());
+      }
+
+      while (table.rows[0].cells.length < state.columns.length) {
+        const next = state.columns[table.rows[0].cells.length];
+        addColumnWithName(next.title || "新栏", next.width || "150px");
+      }
+
+      state.columns.forEach((column, index) => {
+        const label = table.rows[0].cells[index]?.querySelector(".header-label");
+        if (label) label.textContent = column.title || "新栏";
+        const col = table.querySelector("colgroup").children[index];
+        if (col) col.style.width = column.width || "150px";
+      });
+
+      const body = table.tBodies[0];
+      while (body.rows.length < state.rows.length) {
+        const row = body.rows[0].cloneNode(true);
+        clearRow(row);
+        body.appendChild(row);
+      }
+      while (body.rows.length > Math.max(1, state.rows.length)) body.deleteRow(body.rows.length - 1);
+
+      state.rows.forEach((rowData, rowIndex) => {
+        const row = body.rows[rowIndex];
+        rowData.forEach((value, cellIndex) => setFieldValue(row.cells[cellIndex], value));
+        paintRow(row);
+      });
+
+      renumberRows();
+      setupHeaders();
+      setupRows();
+      isLoadingSharedData = false;
+    }
+
+    function cloneState(state) {
+      return JSON.parse(JSON.stringify(state || {}));
+    }
+
+    function sameValue(left, right) {
+      return String(left || "") === String(right || "");
+    }
+
+    function mergeStates(latest, baseline, local) {
+      if (!latest || !latest.columns || !baseline || !baseline.columns) {
+        return local;
+      }
+
+      const structureChanged =
+        JSON.stringify(local.columns) !== JSON.stringify(baseline.columns);
+      if (structureChanged) return local;
+
+      const rowCountChanged = (local.rows?.length || 0) !== (baseline.rows?.length || 0);
+      if (rowCountChanged) return local;
+
+      const merged = cloneState(latest);
+      merged.updatedAt = new Date().toISOString();
+      merged.rules = local.rules;
+      merged.columns = local.columns;
+
+      const maxRows = Math.max(
+        latest.rows?.length || 0,
+        baseline.rows?.length || 0,
+        local.rows?.length || 0
+      );
+      const columnCount = local.columns.length;
+      merged.rows = [];
+
+      for (let rowIndex = 0; rowIndex < maxRows; rowIndex += 1) {
+        const row = [];
+        for (let cellIndex = 0; cellIndex < columnCount; cellIndex += 1) {
+          const baseValue = baseline.rows?.[rowIndex]?.[cellIndex] || "";
+          const localValue = local.rows?.[rowIndex]?.[cellIndex] || "";
+          const latestValue = latest.rows?.[rowIndex]?.[cellIndex] || "";
+          row.push(sameValue(localValue, baseValue) ? latestValue : localValue);
+        }
+        if (row.some((value, index) => index === 0 || String(value || "").trim() !== "")) {
+          merged.rows.push(row);
+        }
+      }
+
+      return merged;
+    }
+
+    function scheduleSave() {
+      if (isLoadingSharedData) return;
+      hasUnsavedChanges = true;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        setSaveStatus("有未保存修改，请点“保存修改”");
+      }, 200);
+    }
+
+    async function saveSharedData(options = {}) {
+      try {
+        clearTimeout(saveTimer);
+        setSaveStatus("正在保存");
+        const localState = getState();
+        const latestResponse = await fetch("/api/schedule");
+        const latestState = latestResponse.ok ? await latestResponse.json() : null;
+        const stateToSave = mergeStates(latestState, loadedState, localState);
+        stateToSave.updatedAt = new Date().toISOString();
+
+        const response = await fetch("/api/schedule", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(stateToSave)
+        });
+        if (!response.ok) throw new Error("保存失败");
+        loadedState = cloneState(stateToSave);
+        hasUnsavedChanges = false;
+        setSaveStatus(options.reason || "已保存，其他人刷新后可看到");
+      } catch (error) {
+        setSaveStatus("保存失败，请确认是通过共享网址打开");
+      }
+    }
+
+    async function loadSharedData() {
+      if (hasUnsavedChanges && !confirm("你有未保存修改，刷新共享内容会覆盖当前页面。确定刷新吗？")) {
+        return;
+      }
+      try {
+        const response = await fetch("/api/schedule");
+        if (!response.ok) throw new Error("读取失败");
+        const state = await response.json();
+        applyState(state);
+        loadedState = cloneState(state);
+        hasUnsavedChanges = false;
+        setSaveStatus(state.updatedAt ? "已读取共享内容" : "暂无共享内容，填写后请点保存");
+      } catch (error) {
+        setSaveStatus("当前不是共享模式，请通过共享网址打开");
+      }
+    }
+
+    function cellText(cell) {
+      const field = cell.querySelector("input, select, textarea");
+      if (field) return field.value.replaceAll('"', '""');
+      return cell.innerText.trim().replaceAll('"', '""');
+    }
+
+    function exportCsv() {
+      const header = Array.from(table.tHead.rows[0].cells).map((cell) => `"${headerText(cell)}"`).join(",");
+      const body = Array.from(table.tBodies[0].rows).map((row) =>
+        Array.from(row.cells).map((cell) => `"${cellText(cell)}"`).join(",")
+      );
+      const blob = new Blob(["\ufeff" + [header, ...body].join("\n")], { type: "text/csv;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "亚马逊设计作图排期表.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    setupHeaders();
+    table.querySelectorAll("tbody tr").forEach(paintRow);
+    setupRows();
+    document.addEventListener("input", scheduleSave);
+    document.addEventListener("change", scheduleSave);
+    loadSharedData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "amazon-design-schedule",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared Amazon design schedule table",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
